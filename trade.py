@@ -226,21 +226,15 @@ def cmd_trades_today(_=None):
 
 def cmd_limitup(_=None):
     """连板梯队"""
+    import subprocess, os
+    sp = os.path.dirname(__file__)
     try:
-        import subprocess, os, json
-        sp = os.path.dirname(__file__)
-        r = subprocess.run([sys.executable, os.path.join(sp, 'limitup.py')], capture_output=True, text=True, timeout=20)
-        return r.stdout.strip() or '获取失败'
+        r = subprocess.run([sys.executable, os.path.join(sp, 'limitup.py')], capture_output=True, text=True, timeout=20, env={**os.environ, 'PYTHONIOENCODING': 'utf-8'})
+        out = r.stdout.strip()
+        if out: return out
     except:
         pass
-    return """今日连板梯队:
-
-5连板: 尚纬股份(603333)
-4连板: 融发核电(002366)
-3连板: 通达电气(603390) 云内动力(000903) 长城电工(600192)
-       会稽山(601579) 汇金通(603577) 均瑶健康(605388)
-2连板: 劲旅环境 尤夫股份 明牌珠宝 华森制药
-       德邦股份 锦泓集团 海利尔 江苏新能 美邦股份"""
+    return '获取连板数据失败'
 
 def cmd_help(_=None):
     return """🐻 小布交易系统 v1.0

@@ -167,16 +167,7 @@ def api_ladder():
             data = json.load(f)
         return jsonify(data)
     except:
-        return jsonify({'date': '2026-05-28', 'time': '收盘', 'stocks': [
-            {'name':'尚纬股份','code':'603333','price':9.05,'zdf':10.0,'board':5},
-            {'name':'融发核电','code':'002366','price':7.04,'zdf':10.0,'board':4},
-            {'name':'通达电气','code':'603390','price':13.36,'zdf':10.0,'board':3},
-            {'name':'云内动力','code':'000903','price':1.76,'zdf':10.0,'board':3},
-            {'name':'长城电工','code':'600192','price':0,'zdf':10.0,'board':3},
-            {'name':'会稽山','code':'601579','price':0,'zdf':10.0,'board':3},
-            {'name':'汇金通','code':'603577','price':0,'zdf':10.0,'board':3},
-            {'name':'均瑶健康','code':'605388','price':0,'zdf':10.0,'board':3},
-        ]})
+        return jsonify({'date': '2026-05-28', 'time': '收盘', 'stocks': []})
 
 @app.route('/api/search', methods=['POST'])
 def api_search():
