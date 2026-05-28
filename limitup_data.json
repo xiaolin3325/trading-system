@@ -1,33 +1,15 @@
 {
   "date": "2026-05-28",
-  "time": "收盘",
+  "time": "20日滚动",
   "stocks": [
-    {
-      "name": "永安药业",
-      "code": "002365",
-      "price": 11.77,
-      "zdf": 10.0,
-      "consecutive": 0,
-      "days": 11,
-      "boards": 7,
-      "tag": "牛磺酸龙头"
-    },
-    {
-      "name": "滨海能源",
-      "code": "000695",
-      "price": 15.36,
-      "zdf": 10.0,
-      "consecutive": 0,
-      "days": 8,
-      "boards": 6,
-      "tag": "核电"
-    },
     {
       "name": "尚纬股份",
       "code": "603333",
       "price": 9.05,
       "zdf": 10.0,
       "consecutive": 5,
+      "boards": 5,
+      "span_days": 5,
       "tag": "核电电缆"
     },
     {
@@ -36,6 +18,8 @@
       "price": 7.04,
       "zdf": 10.0,
       "consecutive": 4,
+      "boards": 4,
+      "span_days": 4,
       "tag": "可控核聚变"
     },
     {
@@ -44,6 +28,8 @@
       "price": 13.36,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "无人物流车"
     },
     {
@@ -52,6 +38,8 @@
       "price": 1.76,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "无人配送动力"
     },
     {
@@ -60,6 +48,8 @@
       "price": 8.5,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "核电开关设备"
     },
     {
@@ -68,6 +58,8 @@
       "price": 12.5,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "黄酒高端化"
     },
     {
@@ -76,6 +68,8 @@
       "price": 9.8,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "特高压铁塔"
     },
     {
@@ -84,6 +78,8 @@
       "price": 15.2,
       "zdf": 10.0,
       "consecutive": 3,
+      "boards": 3,
+      "span_days": 3,
       "tag": "益生菌"
     },
     {
@@ -92,6 +88,8 @@
       "price": 22.0,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "氢能环卫"
     },
     {
@@ -100,6 +98,8 @@
       "price": 6.5,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "超高分子量纤维"
     },
     {
@@ -108,6 +108,8 @@
       "price": 8.2,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "黄金IP"
     },
     {
@@ -116,6 +118,8 @@
       "price": 18.5,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "中药创新药"
     },
     {
@@ -124,6 +128,8 @@
       "price": 14.3,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "京东物流整合"
     },
     {
@@ -132,6 +138,8 @@
       "price": 11.0,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "IP联名"
     },
     {
@@ -140,6 +148,8 @@
       "price": 20.5,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "绿色农药"
     },
     {
@@ -148,6 +158,8 @@
       "price": 12.8,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "资产注入"
     },
     {
@@ -156,6 +168,8 @@
       "price": 16.0,
       "zdf": 10.0,
       "consecutive": 2,
+      "boards": 2,
+      "span_days": 2,
       "tag": "水溶肥"
     },
     {
@@ -164,6 +178,8 @@
       "price": 18.53,
       "zdf": 10.0,
       "consecutive": 1,
+      "boards": 1,
+      "span_days": 0,
       "tag": "核电跟风"
     },
     {
@@ -172,14 +188,38 @@
       "price": 8.0,
       "zdf": 10.0,
       "consecutive": 1,
+      "boards": 1,
+      "span_days": 0,
       "tag": "电力+AI"
+    },
+    {
+      "name": "永安药业",
+      "code": "002365",
+      "price": 11.77,
+      "zdf": 0.0,
+      "consecutive": 0,
+      "boards": 7,
+      "span_days": 11,
+      "tag": "牛磺酸龙头"
+    },
+    {
+      "name": "滨海能源",
+      "code": "000695",
+      "price": 15.36,
+      "zdf": 0.0,
+      "consecutive": 0,
+      "boards": 6,
+      "span_days": 8,
+      "tag": "核电"
     },
     {
       "name": "杭电股份",
       "code": "603618",
       "price": 38.83,
       "zdf": 10.0,
-      "consecutive": 1,
+      "consecutive": 0,
+      "boards": 4,
+      "span_days": 16,
       "tag": "通信电子"
     }
   ]

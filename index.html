@@ -428,14 +428,14 @@ function quickSell(code){
 async function loadLadder(){
   try{
     const r = await (await fetch('/api/ladder')).json();
-    let html = `<div style="margin-bottom:12px;color:#8b949e">更新: ${r.date} ${r.time} | 总数: ${r.stocks.length}只</div>`;
+    let html = `<div style="margin-bottom:12px;color:#8b949e">${r.date} ${r.time} | ${r.stocks.length}只涨停</div>`;
     
-    // 分组: 非连续几天几板 + 连板梯队
+    // 分组
     const nonConsec = [];
     const ladder = {};
     for(const s of r.stocks){
       const con = s.consecutive || 0;
-      if(con === 0 && s.days && s.boards){
+      if(con === 0 && s.boards > 1){
         nonConsec.push(s);
       } else {
         if(!ladder[con]) ladder[con] = [];
@@ -443,12 +443,12 @@ async function loadLadder(){
       }
     }
     
-    // 非连续
+    // 几天几板
     if(nonConsec.length){
       nonConsec.sort((a,b)=>b.boards-a.boards);
       html += '<div style="margin-bottom:16px"><strong>🔥 几天几板</strong><table><thead><tr><th>名称</th><th>代码</th><th>表现</th><th>价格</th><th>题材</th></tr></thead><tbody>';
       for(const s of nonConsec){
-        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td class="positive">${s.days}天${s.boards}板</td><td>${(s.price||0).toFixed(2)}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
+        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td class="positive">${s.span_days}天${s.boards}板</td><td>${(s.price||0).toFixed(2)}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
       }
       html += '</tbody></table></div>';
     }
@@ -457,9 +457,12 @@ async function loadLadder(){
     const boards = Object.keys(ladder).map(Number).sort((a,b)=>b-a);
     for(const d of boards){
       const label = d === 1 ? '首板' : d + '连板';
-      html += `<div style="margin-bottom:12px"><strong>${label}</strong><table><thead><tr><th>名称</th><th>代码</th><th>价格</th><th>涨幅</th><th>题材</th></tr></thead><tbody>`;
+      html += `<div style="margin-bottom:12px"><strong>${label}</strong><table><thead><tr><th>名称</th><th>代码</th><th>价格</th><th>涨幅</th><th>20日</th><th>题材</th></tr></thead><tbody>`;
       for(const s of ladder[d]){
-        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td>${(s.price||0).toFixed(2)}</td><td class="positive">+${(s.zdf||0).toFixed(0)}%</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
+        let extra = '';
+        if(s.boards > s.consecutive) extra = `${s.span_days}天${s.boards}板`;
+        else if(s.consecutive >= 2) extra = s.consecutive + '连板';
+        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td>${(s.price||0).toFixed(2)}</td><td class="positive">+${(s.zdf||0).toFixed(0)}%</td><td>${extra}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
       }
       html += '</tbody></table></div>';
     }
