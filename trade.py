@@ -109,7 +109,7 @@ def cmd_sell(params):
         except:
             notes = ' '.join(parts[2:])
     
-    return sell(code, shares, notes)
+    return sell(code, shares, notes, price)
 
 def cmd_holdings(_=None):
     """查看持仓"""
@@ -236,6 +236,87 @@ def cmd_limitup(_=None):
         pass
     return '获取连板数据失败'
 
+# ========== 资金管理命令 ==========
+
+def cmd_init_capital(params):
+    """初始资金 <金额>"""
+    try:
+        amount = float(params.strip())
+        if amount <= 0:
+            return "❌ 金额必须大于0"
+        return init_capital(amount)
+    except:
+        return "用法: 初始资金 <金额>"
+
+def cmd_reset_capital(params):
+    """重置资金 <金额>"""
+    try:
+        amount = float(params.strip())
+        if amount <= 0:
+            return "❌ 金额必须大于0"
+        return reset_capital(amount)
+    except:
+        return "用法: 重置资金 <金额>"
+
+def cmd_deposit(params):
+    """入金 <金额> [备注]"""
+    parts = params.strip().split(None, 1)
+    if len(parts) < 1:
+        return "用法: 入金 <金额> [备注]"
+    try:
+        amount = float(parts[0])
+        notes = parts[1] if len(parts) > 1 else ''
+        return deposit(amount, notes)
+    except:
+        return "❌ 金额格式错误"
+
+def cmd_withdraw(params):
+    """出金 <金额> [备注]"""
+    parts = params.strip().split(None, 1)
+    if len(parts) < 1:
+        return "用法: 出金 <金额> [备注]"
+    try:
+        amount = float(parts[0])
+        notes = parts[1] if len(parts) > 1 else ''
+        return withdraw(amount, notes)
+    except:
+        return "❌ 金额格式错误"
+
+def cmd_capital(_=None):
+    """查看资金状况"""
+    s = get_capital_summary()
+    
+    lines = [
+        "💰 资金状况",
+        f"  {'='*30}",
+        f"  初始资金: ¥{s['initial']:,.2f}" if s['initial'] > 0 else "  初始资金: 未设置",
+        f"  累计入金: +¥{s['total_deposit']:,.2f}" if s['total_deposit'] > 0 else None,
+        f"  累计出金: -¥{s['total_withdraw']:,.2f}" if s['total_withdraw'] > 0 else None,
+        f"  净投入: ¥{s['net_input']:,.2f}",
+        f"  当前余额: ¥{s['current_balance']:,.2f}",
+    ]
+    
+    # 持仓信息
+    h = get_holdings()
+    if h:
+        total_cost = sum(r['total_cost'] for r in h)
+        lines.append(f"  持仓成本: ¥{total_cost:,.2f}")
+        lines.append(f"  持有股数: {sum(r['shares'] for r in h)}只")
+    
+    # 最近资金记录
+    records = s['records']
+    if records:
+        lines.append(f"")
+        lines.append(f"  📋 最近资金记录:")
+        for r in records[:5]:
+            icon = {'init': '💵', 'deposit': '🟢入金', 'withdraw': '🔴出金'}
+            label = icon.get(r['type'], r['type'])
+            lines.append(f"    {label} ¥{r['amount']:,.2f} | 余额:{r['balance_after']:,.2f}")
+            if r.get('notes') and r['notes'] not in ('初始资金','入金','出金','初始资金（重置）'):
+                lines.append(f"      备注: {r['notes']}")
+    
+    return '\n'.join(filter(None, lines))
+
 def cmd_help(_=None):
     return """🐻 小布交易系统 v1.0
 
@@ -248,16 +329,26 @@ def cmd_help(_=None):
   卖出 <代码> <股数> [价格] [备注]
   持仓
 
+💵 资金管理
+  初始资金 <金额>
+  入金 <金额> [备注]
+  出金 <金额> [备注]
+  资金(状况)
+
 📊 复盘
   交易记录
   交易统计
   今日交易
+  连板(梯队)
 
 💡 示例:
   加入观察 000695 核电+N字双刀共振
   买入 000695 500 15.20
   卖出 000695 200
-  持仓"""
+  持仓
+  初始资金 100000
+  入金 50000 追加资金
+  出金 20000"""
 
 def process_command(text):
     """主命令处理器"""
@@ -276,6 +367,12 @@ def process_command(text):
         '今日交易': cmd_trades_today,
         '连板': cmd_limitup,
         '连板梯队': cmd_limitup,
+        '初始资金': cmd_init_capital,
+        '重置资金': cmd_reset_capital,
+        '入金': cmd_deposit,
+        '出金': cmd_withdraw,
+        '资金': cmd_capital,
+        '资金状况': cmd_capital,
     }
     
     for prefix, handler in cmds.items():

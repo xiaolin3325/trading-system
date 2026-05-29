@@ -11,7 +11,9 @@ def scan():
     import pandas as pd
     
     # 获取涨停板数据
-    df = ak.stock_zt_pool_em(date='20260528')
+    from datetime import datetime
+    today_str = datetime.now().strftime('%Y%m%d')
+    df = ak.stock_zt_pool_em(date=today_str)
     print(f'涨停总数: {len(df)}只\n')
     
     # 字段说明: 代码,名称,涨跌幅,最新价,连板数,涨停统计,封板时间...

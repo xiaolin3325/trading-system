@@ -52,6 +52,10 @@ tr:hover td{background:#1c2128}
 .msg-toast.success{display:block;background:#238636;color:#fff;border:1px solid #2ea043}
 .msg-toast.error{display:block;background:#da3633;color:#fff;border:1px solid #f85149}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.holdings-hidden #holdingsContainer,
+.holdings-hidden .stats-bar{filter:blur(8px);pointer-events:none;user-select:none;transition:filter .3s}
+.holdings-hidden #holdingsContainer:hover,
+.holdings-hidden .stats-bar:hover{filter:blur(4px)}
 .empty-state{text-align:center;padding:40px;color:#8b949e}
 .empty-state p{font-size:14px;margin-top:8px}
 .pl-bar{display:inline-block;width:60px;height:4px;border-radius:2px;margin-left:8px;vertical-align:middle}
@@ -79,7 +83,10 @@ tr:hover td{background:#1c2128}
     <h1>🐻 <span>小布</span>交易系统</h1>
     <div class="sub">短线量化 · 实时风控 · 操作复盘</div>
   </div>
-  <div id="serverTime" class="sub"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="btn" id="toggleHoldingsBtnHeader" onclick="toggleHoldings()" title="隐藏/显示持仓数据" style="font-size:12px">👁 隐藏</button>
+    <div id="serverTime" class="sub"></div>
+  </div>
 </div>
 
 <div class="stats-bar" id="statsBar">
@@ -103,6 +110,10 @@ tr:hover td{background:#1c2128}
     <span class="stat-label">观察池</span>
     <span class="stat-value white" id="statWatchCount">-</span>
   </div>
+  <div class="stat-item">
+    <span class="stat-label">可用余额</span>
+    <span class="stat-value white" id="statBalance">-</span>
+  </div>
 </div>
 
 <div class="container">
@@ -110,8 +121,10 @@ tr:hover td{background:#1c2128}
     <a class="active" data-tab="holdings">📊 持仓</a>
     <a data-tab="watchlist">📋 观察池</a>
     <a data-tab="trades">📝 交易记录</a>
+    <a data-tab="capital">💰 资金管理</a>
     <a data-tab="summary">📈 复盘分析</a>
     <a data-tab="ladder">🪜 连板梯队</a>
+    <a data-tab="signals">📡 交易信号</a>
     <a data-tab="quick">⚡ 快速操作</a>
   </nav>
 
@@ -120,17 +133,26 @@ tr:hover td{background:#1c2128}
     <!-- 持仓 -->
     <div class="section active" id="tab-holdings">
       <div class="card">
-        <div class="card-title">当前持仓</div>
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>当前持仓</span>
+          <button class="btn" id="toggleHoldingsBtn" onclick="toggleHoldings()" title="隐藏/显示持仓" style="font-size:11px;padding:2px 10px">👁 隐藏</button>
+          <span style="font-size:11px;color:#8b949e" id="statsBarHint">顶栏一并隐藏</span>
+        </div>
+        <div id="holdingsContainer">
         <table><thead><tr>
           <th>代码</th><th>名称</th><th>持仓</th><th>成本价</th><th>现价</th><th>市值</th><th>盈亏</th><th>操作</th>
         </tr></thead><tbody id="holdingsBody"></tbody></table>
+        </div>
       </div>
     </div>
 
     <!-- 观察池 -->
     <div class="section" id="tab-watchlist">
       <div class="card">
-        <div class="card-title">观察池</div>
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>观察池</span>
+          <button class="btn" onclick="exportTdx()" title="导出到通达信自选股" style="font-size:11px;padding:2px 10px">📤 通达信</button>
+        </div>
         <table><thead><tr>
           <th>代码</th><th>名称</th><th>现价</th><th>涨跌</th><th>加入原因</th><th>加入日期</th><th>操作</th>
         </tr></thead><tbody id="watchlistBody"></tbody></table>
@@ -147,6 +169,57 @@ tr:hover td{background:#1c2128}
       </div>
     </div>
 
+    <!-- 资金管理 -->
+    <div class="section" id="tab-capital">
+      <div class="card">
+        <div class="card-title">💰 资金概况</div>
+        <div id="capitalOverview" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💵 资金操作</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+          <div style="border:1px solid #30363d;border-radius:6px;padding:12px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">🏦 初始资金</div>
+            <div class="form-row">
+              <input type="number" step="0.01" id="capInitAmount" placeholder="金额">
+              <button class="btn btn-primary" onclick="capitalInit()">设置</button>
+            </div>
+            <div style="font-size:11px;color:#8b949e;margin-top:4px">已设置则为追加，如需覆盖先重置</div>
+          </div>
+          <div style="border:1px solid #30363d;border-radius:6px;padding:12px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">🟢 入金</div>
+            <div class="form-row">
+              <input type="number" step="0.01" id="capDepositAmount" placeholder="金额">
+              <input type="text" id="capDepositNotes" placeholder="备注(可选)" style="flex:0.6;min-width:80px">
+              <button class="btn btn-green" onclick="capitalDeposit()">入金</button>
+            </div>
+          </div>
+          <div style="border:1px solid #30363d;border-radius:6px;padding:12px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">🔴 出金</div>
+            <div class="form-row">
+              <input type="number" step="0.01" id="capWithdrawAmount" placeholder="金额">
+              <input type="text" id="capWithdrawNotes" placeholder="备注(可选)" style="flex:0.6;min-width:80px">
+              <button class="btn btn-danger" onclick="capitalWithdraw()">出金</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid #21262d;padding-top:12px">
+          <div class="form-row">
+            <input type="number" step="0.01" id="capResetAmount" placeholder="重置初始资金金额">
+            <button class="btn" onclick="capitalReset()" style="color:#f85149;border-color:#f85149">⚠ 重置初始资金</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 资金流水</div>
+        <table><thead><tr>
+          <th>类型</th><th>金额</th><th>余额</th><th>备注</th><th>日期</th>
+        </tr></thead><tbody id="capitalRecordsBody"></tbody></table>
+      </div>
+    </div>
+
     <!-- 复盘分析 -->
     <div class="section" id="tab-summary">
       <div class="card">
@@ -160,6 +233,19 @@ tr:hover td{background:#1c2128}
       <div class="card">
         <div class="card-title">🪜 连板梯队 - 今日涨停</div>
         <div id="ladderContent"></div>
+      </div>
+    </div>
+
+    <!-- 交易信号 -->
+    <div class="section" id="tab-signals">
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📡 交易信号 — N字启动+惠天模式</span>
+          <button class="btn btn-primary" onclick="loadSignals()" style="font-size:11px;padding:2px 10px">🔄 刷新</button>
+        </div>
+        <div id="signalsContent">
+          <div class="empty-state"><p>点击刷新获取信号</p></div>
+        </div>
       </div>
     </div>
 
@@ -211,7 +297,7 @@ tr:hover td{background:#1c2128}
 <div id="toast" class="msg-toast"></div>
 
 <script>
-const SECTIONS = ['holdings','watchlist','trades','summary','ladder','quick'];
+const SECTIONS = ['holdings','watchlist','trades','capital','summary','ladder','signals','quick'];
 
 // 导航切换
 document.querySelectorAll('.sidebar a').forEach(a => {
@@ -283,7 +369,7 @@ async function loadWatchlist(){
     const tbody = document.getElementById('watchlistBody');
     document.getElementById('statWatchCount').textContent = r.length;
     if(!r.length){
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">观察池为空</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">观察池为空</td></tr>';
       return;
     }
     tbody.innerHTML = r.map(w => {
@@ -295,7 +381,8 @@ async function loadWatchlist(){
         <td class="${cls}">${w.change ? (w.change > 0 ? '+' : '') + fmt(w.change) + '%' : '--'}</td>
         <td>${w.reason || '-'}</td>
         <td>${w.added_date}</td>
-        <td><button class="btn btn-primary" onclick="quickBuy('${w.code}')">买入</button></td>
+        <td><button class="btn btn-primary" onclick="quickBuy('${w.code}')">买入</button>
+        <button class="btn" onclick="removeWatch('${w.code}')" style="margin-left:4px;color:#f85149;border-color:#f85149">移除</button></td>
       </tr>`;
     }).join('');
   }catch(e){ console.error(e); }
@@ -407,6 +494,30 @@ async function sellStock(){
   loadAll();
 }
 
+async function removeWatch(code){
+  const r = await (await fetch('/api/watch/remove', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code})})).json();
+  showMsg(r.msg || '已移除');
+  loadWatchlist();
+}
+
+async function exportTdx(){
+  try{
+    const r = await fetch('/api/watch/export');
+    const text = await r.text();
+    const blob = new Blob([text], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'xiaobu_watchlist.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showMsg('✅ 已导出，在通达信导入即可');
+  }catch(e){
+    showMsg('❌ 导出失败', 'error');
+  }
+}
+
 function quickBuy(code){
   document.getElementById('buyCode').value = code;
   document.getElementById('buyShares').focus();
@@ -446,9 +557,11 @@ async function loadLadder(){
     // 几天几板
     if(nonConsec.length){
       nonConsec.sort((a,b)=>b.boards-a.boards);
-      html += '<div style="margin-bottom:16px"><strong>🔥 几天几板</strong><table><thead><tr><th>名称</th><th>代码</th><th>表现</th><th>价格</th><th>题材</th></tr></thead><tbody>';
+      html += '<div style="margin-bottom:16px"><strong>🔥 几天几板</strong><table><thead><tr><th>名称</th><th>代码</th><th>表现</th><th>当前价</th><th>涨跌幅</th><th>题材</th></tr></thead><tbody>';
       for(const s of nonConsec){
-        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td class="positive">${s.span_days}天${s.boards}板</td><td>${(s.price||0).toFixed(2)}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
+        const zdfCls = s.zdf > 0 ? 'positive' : s.zdf < 0 ? 'negative' : 'neutral';
+        const zdfStr = s.zdf > 0 ? '+' + (s.zdf||0).toFixed(1) + '%' : (s.zdf||0).toFixed(1) + '%';
+        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td class="positive">${s.span_days}天${s.boards}板</td><td>${(s.price||0).toFixed(2)}</td><td class="${zdfCls}">${zdfStr}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
       }
       html += '</tbody></table></div>';
     }
@@ -457,12 +570,15 @@ async function loadLadder(){
     const boards = Object.keys(ladder).map(Number).sort((a,b)=>b-a);
     for(const d of boards){
       const label = d === 1 ? '首板' : d + '连板';
-      html += `<div style="margin-bottom:12px"><strong>${label}</strong><table><thead><tr><th>名称</th><th>代码</th><th>价格</th><th>涨幅</th><th>20日</th><th>题材</th></tr></thead><tbody>`;
+      let show20 = false; // 是否显示20日信息，只有少数股票有，默认隐藏简化
+      html += `<div style="margin-bottom:12px"><strong>${label}</strong><table><thead><tr><th>名称</th><th>代码</th><th>当前价</th><th>涨跌幅</th><th>连板</th><th>题材</th></tr></thead><tbody>`;
       for(const s of ladder[d]){
         let extra = '';
         if(s.boards > s.consecutive) extra = `${s.span_days}天${s.boards}板`;
         else if(s.consecutive >= 2) extra = s.consecutive + '连板';
-        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td>${(s.price||0).toFixed(2)}</td><td class="positive">+${(s.zdf||0).toFixed(0)}%</td><td>${extra}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
+        const zdfCls = s.zdf >= 0 ? 'positive' : 'negative';
+        const zdfStr = (s.zdf||0) >= 0 ? '+' + (s.zdf||0).toFixed(1) + '%' : (s.zdf||0).toFixed(1) + '%';
+        html += `<tr><td>${s.name}</td><td><span class="code-tag">${s.code}</span></td><td>${(s.price||0).toFixed(2)}</td><td class="${zdfCls}">${zdfStr}</td><td>${extra}</td><td style="color:#8b949e;font-size:12px">${s.tag||''}</td></tr>`;
       }
       html += '</tbody></table></div>';
     }
@@ -473,9 +589,172 @@ async function loadLadder(){
   }
 }
 
-async function loadAll(){
-  await Promise.all([loadHoldings(), loadWatchlist(), loadTrades(), loadSummary(), loadLadder()]);
+// ========== 资金管理 ==========
+
+async function loadCapital(){
+  try{
+    const r = await (await fetch('/api/capital')).json();
+    const overview = document.getElementById('capitalOverview');
+    overview.innerHTML = `
+      <div class="stat-item"><span class="stat-label">初始资金</span><span class="stat-value white">¥${fmt(r.initial)}</span></div>
+      <div class="stat-item"><span class="stat-label">累计入金</span><span class="stat-value white">+¥${fmt(r.total_deposit)}</span></div>
+      <div class="stat-item"><span class="stat-label">累计出金</span><span class="stat-value white">-¥${fmt(r.total_withdraw)}</span></div>
+      <div class="stat-item"><span class="stat-label">净投入</span><span class="stat-value white">¥${fmt(r.net_input)}</span></div>
+      <div class="stat-item"><span class="stat-label">可用余额</span><span class="stat-value white">¥${fmt(r.current_balance)}</span></div>
+    `;
+
+    document.getElementById('statBalance').textContent = '¥' + fmt(r.current_balance);
+
+    const tbody = document.getElementById('capitalRecordsBody');
+    if(!r.records.length){
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无资金记录</td></tr>';
+      return;
+    }
+    tbody.innerHTML = r.records.map(rec => {
+      let icon, cls;
+      if(rec.type === 'init'){ icon = '💵 初始'; cls = 'white'; }
+      else if(rec.type === 'deposit'){ icon = '🟢 入金'; cls = 'positive'; }
+      else { icon = '🔴 出金'; cls = 'negative'; }
+      let note = rec.notes || '';
+      if(note === '初始资金' || note === '初始资金（重置）' || note === '入金' || note === '出金') note = '';
+      return `<tr>
+        <td><span style="color:var(--${cls})">${icon}</span></td>
+        <td class="${cls}">${rec.type === 'withdraw' ? '-' : '+'}¥${fmt(rec.amount)}</td>
+        <td>¥${fmt(rec.balance_after)}</td>
+        <td style="color:#8b949e;font-size:12px">${note || '-'}</td>
+        <td>${rec.record_date}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){ console.error(e); }
 }
+
+async function capitalInit(){
+  const amount = document.getElementById('capInitAmount').value;
+  if(!amount) return;
+  const r = await (await fetch('/api/capital/init', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount: parseFloat(amount)})})).json();
+  showMsg(r.msg);
+  document.getElementById('capInitAmount').value = '';
+  loadCapital();
+}
+
+async function capitalDeposit(){
+  const amount = document.getElementById('capDepositAmount').value;
+  const notes = document.getElementById('capDepositNotes').value.trim();
+  if(!amount) return;
+  const r = await (await fetch('/api/capital/deposit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount: parseFloat(amount), notes})})).json();
+  showMsg(r.msg);
+  document.getElementById('capDepositAmount').value = '';
+  document.getElementById('capDepositNotes').value = '';
+  loadCapital();
+}
+
+async function capitalWithdraw(){
+  const amount = document.getElementById('capWithdrawAmount').value;
+  const notes = document.getElementById('capWithdrawNotes').value.trim();
+  if(!amount) return;
+  const r = await (await fetch('/api/capital/withdraw', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount: parseFloat(amount), notes})})).json();
+  showMsg(r.msg);
+  document.getElementById('capWithdrawAmount').value = '';
+  document.getElementById('capWithdrawNotes').value = '';
+  loadCapital();
+}
+
+async function capitalReset(){
+  const amount = document.getElementById('capResetAmount').value;
+  if(!amount) return;
+  if(!confirm('确定要重置初始资金为 ¥' + amount + ' 吗？')) return;
+  const r = await (await fetch('/api/capital/reset', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount: parseFloat(amount)})})).json();
+  showMsg(r.msg);
+  document.getElementById('capResetAmount').value = '';
+  loadCapital();
+}
+
+// ========== 持仓显示切换 ==========
+
+function toggleHoldings(){
+  const body = document.body;
+  const hidden = body.classList.toggle('holdings-hidden');
+  const labels = ['👁 显示','👁 隐藏'];
+  const titles = ['点击显示持仓数据','点击隐藏持仓数据'];
+  const idx = hidden ? 0 : 1;
+  document.querySelectorAll('.toggle-holdings-btn').forEach(b => {
+    b.textContent = labels[idx];
+    b.title = titles[idx];
+  });
+  localStorage.setItem('holdingsHidden', hidden ? '1' : '0');
+}
+
+function initHoldingsToggle(){
+  document.querySelectorAll('#toggleHoldingsBtn, #toggleHoldingsBtnHeader').forEach(b => b.classList.add('toggle-holdings-btn'));
+  if(localStorage.getItem('holdingsHidden') === '1'){
+    document.body.classList.add('holdings-hidden');
+    document.querySelectorAll('.toggle-holdings-btn').forEach(b => {
+      b.textContent = '👁 显示';
+      b.title = '点击显示持仓数据';
+    });
+  }
+}
+
+// ========== 交易信号 ==========
+
+async function loadSignals(){
+  const content = document.getElementById('signalsContent');
+  content.innerHTML = '<div class="empty-state"><p>⏳ 扫描中，请稍候...</p></div>';
+  try{
+    const r = await (await fetch('/api/signals')).json();
+    if(!r || !r.length){
+      content.innerHTML = '<div class="empty-state"><p>暂无数据，请先加入观察池</p></div>';
+      return;
+    }
+    let html = '';
+    const buys = r.filter(s => s.action.includes('买入'));
+    const watches = r.filter(s => s.action.includes('观察') || s.action.includes('关注'));
+    const discards = r.filter(s => s.action.includes('放弃'));
+    
+    if(buys.length){
+      html += '<div style="margin-bottom:16px"><div style="color:#3fb950;font-weight:600;margin-bottom:8px">⭐⭐⭐ 买入信号</div>';
+      for(const s of buys){
+        const det = Object.entries(s.detail).map(([k,v]) => `${k}:${v}`).join(' | ');
+        html += `<div style="background:#0d1117;border:1px solid #238636;border-radius:6px;padding:10px;margin-bottom:8px">
+          <div style="font-weight:600;margin-bottom:4px">${s.name}(${s.code}) 评分:${s.score}/10</div>
+          <div style="font-size:12px;color:#8b949e">${det}</div>
+          <div style="font-size:12px;margin-top:4px">${s.reason.map(r => r.replace('✅','<span style="color:#3fb950">✅</span>').replace('❌','<span style="color:#f85149">❌</span>').replace('⚠️','<span style="color:#d29922">⚠️</span>').replace('⚪','<span style="color:#8b949e">⚪</span>')).join('<br>')}</div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    
+    if(watches.length){
+      html += '<div style="margin-bottom:16px"><div style="color:#d29922;font-weight:600;margin-bottom:8px">📊 观察中</div>';
+      for(const s of watches){
+        html += `<div style="display:flex;justify-content:space-between;padding:6px 10px;background:#0d1117;border-bottom:1px solid #21262d;font-size:13px">
+          <span>${s.action} ${s.name}(${s.code})</span>
+          <span style="color:#8b949e">评分:${s.score} 现价:${s.detail.现价||'-'} BBI:${s.detail.BBI||'-'}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    
+    if(discards.length){
+      html += '<div><div style="color:#8b949e;font-weight:600;margin-bottom:4px;font-size:12px">暂不关注</div>';
+      for(const s of discards){
+        html += `<div style="font-size:12px;color:#8b949e;padding:2px 10px">${s.name}(${s.code}) — ${s.reason.slice(0,2).join(' | ')}</div>`;
+      }
+      html += '</div>';
+    }
+    
+    content.innerHTML = html;
+  }catch(e){
+    content.innerHTML = '<div class="empty-state"><p>❌ 扫描失败</p></div>';
+    console.error(e);
+  }
+}
+
+async function loadAll(){
+  await Promise.all([loadHoldings(), loadWatchlist(), loadTrades(), loadCapital(), loadSummary(), loadLadder()]);
+}
+
+initHoldingsToggle();
 
 document.getElementById('serverTime').textContent = new Date().toLocaleString('zh-CN');
 document.addEventListener('keydown', e => {
